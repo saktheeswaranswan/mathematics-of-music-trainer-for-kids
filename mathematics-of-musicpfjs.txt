@@ -1,0 +1,635 @@
+ let tableData = [
+      ["Whole Note", "♩̄", 4],
+      ["Whole Rest", "𝄻", 4],
+      ["Half Note", "♫", 2],
+      ["Half Rest", "𝄼", 2],
+      ["Quarter Note", "♩", 1],
+      ["Quarter Rest", "𝄽", 1],
+      ["Eighth Note", "♪", 0.5],
+      ["Eighth Rest", "𝄾", 0.5],
+      ["Sixteenth Note", "♬", 0.25],
+      ["Sixteenth Rest", "𝄿", 0.25],
+      ["32nd Note", "𝄪", 0.125],
+      ["32nd Rest", "𝄬", 0.125]
+    ];
+
+    let bpmOptions = [120, 160, 2000];
+    let currentBpm = 120;
+    let cellW, cellH;
+    let synth;
+    let soundLoop;
+    let clickedCell = null;
+    let buttons = [];
+    let clickSound;
+
+    function setup() {
+      createCanvas(800, 600);
+      textAlign(CENTER, CENTER);
+      textSize(24);
+      cellW = width / (bpmOptions.length + 3);
+      cellH = 50;
+
+      // synth for playback
+      synth = new p5.MonoSynth();
+
+      // one loop to schedule nothing by default
+      soundLoop = new p5.SoundLoop(playStep, currentBpm);
+      soundLoop.start();
+
+      // Create BPM buttons
+      createBpmButtons();
+
+      // Create a simple click sound
+      clickSound = new p5.Oscillator('sine');
+      clickSound.amp(0.1);
+      clickSound.freq(600);
+      clickSound.start();
+      clickSound.stop();
+    }
+
+    function draw() {
+      background(255);
+      drawTable();
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].draw();
+      }
+    }
+
+    // draw grid and labels
+    function drawTable() {
+      fill(0);
+      text("Note/Rest", cellW * 1.5, cellH / 2);
+      for (let i = 0; i < bpmOptions.length; i++) {
+        text(bpmOptions[i] + " BPM", cellW * (i + 2.5), cellH / 2);
+      }
+
+      for (let r = 0; r < tableData.length; r++) {
+        let y = cellH * (r + 1);
+        fill(0);
+        text(tableData[r][0] + " " + tableData[r][1], cellW * 1.5, y + cellH / 2);
+
+        for (let c = 0; c < bpmOptions.length; c++) {
+          let x = cellW * (c + 2);
+          if (clickedCell && clickedCell.r === r && clickedCell.c === c) {
+            fill(255, 0, 0, 100);
+            rect(x, y, cellW, cellH);
+          }
+          noFill();
+          stroke(0);
+          rect(x, y, cellW, cellH);
+          let seconds = (60 / bpmOptions[c]) * tableData[r][2];
+          fill(0);
+          noStroke();
+          text(seconds.toFixed(3) + "s", x + cellW / 2, y + cellH / 2 + 20);
+        }
+      }
+    }
+
+    function createBpmButtons() {
+      let buttonY = height / 2 - 50;
+      let buttonSpacing = 60;
+
+      // Create buttons for each BPM option
+      for (let i = 0; i < bpmOptions.length; i++) {
+        let button = new BpmButton(bpmOptions[i], width - 150, buttonY + i * buttonSpacing, 100, 50);
+        button.onClick(() => setBpm(bpmOptions[i]));
+        buttons.push(button);
+      }
+    }
+
+    function setBpm(bpm) {
+      currentBpm = bpm;
+      soundLoop.bpm = currentBpm;
+      playClickSound();  // Play click sound when button is pressed
+    }
+
+    // BpmButton class for clickable buttons
+    class BpmButton {
+      constructor(label, x, y, w, h) {
+        this.label = label;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.clicked = false;
+      }
+
+      draw() {
+        fill(this.clicked ? 'gray' : 'lightblue');
+        rect(this.x, this.y, this.w, this.h);
+        fill(0);
+        text(this.label + " BPM", this.x + this.w / 2, this.y + this.h / 2);
+      }
+
+      onClick(callback) {
+        if (this.isMouseOver() && mouseIsPressed) {
+          this.clicked = true;
+          callback();
+          setTimeout(() => this.clicked = false, 200);  // Reset button appearance after a short time
+        }
+      }
+
+      isMouseOver() {
+        return mouseX > this.x && mouseX < this.x + this.w && mouseY > this.y && mouseY < this.y + this.h;
+      }
+    }
+
+    // Play a short "click" sound for feedback
+    function playClickSound() {
+      clickSound.start();
+      setTimeout(() => clickSound.stop(), 100);  // Stop the sound after 100ms
+    }
+
+    // on click, detect cell and schedule playback
+    function mousePressed() {
+      let row = floor(mouseY / cellH) - 1;
+      let col = floor((mouseX - cellW * 2) / cellW);
+      if (row >= 0 && row < tableData.length && col >= 0 && col < bpmOptions.length) {
+        currentBpm = bpmOptions[col];
+        soundLoop.bpm = currentBpm;
+        clickedCell = {r: row, c: col};
+        playNote(tableData[row][1], tableData[row][2]);
+      }
+    }
+
+    // play a single note/rest immediately
+    function playNote(symbol, beats) {
+      let dur = (60 / currentBpm) * beats;
+      if (symbol.includes("Rest")) {
+        setTimeout(() => clickedCell = null, dur * 1000);
+      } else {
+        synth.play('C4', 0.5, 0, dur);
+        setTimeout(() => clickedCell = null, dur * 1000);
+      }
+    }
+
+    // required by SoundLoop but we do nothing on each tick
+    function playStep(time) {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ let tableData = [
+      ["Whole Note", "♩̄", 4],
+      ["Whole Rest", "𝄻", 4],
+      ["Half Note", "♫", 2],
+      ["Half Rest", "𝄼", 2],
+      ["Quarter Note", "♩", 1],
+      ["Quarter Rest", "𝄽", 1],
+      ["Eighth Note", "♪", 0.5],
+      ["Eighth Rest", "𝄾", 0.5],
+      ["Sixteenth Note", "♬", 0.25],
+      ["Sixteenth Rest", "𝄿", 0.25],
+      ["32nd Note", "𝄪", 0.125],
+      ["32nd Rest", "𝄬", 0.125]
+    ];
+
+    let bpmOptions = [120, 160, 2000];
+    let currentBpm = 120;
+    let cellW, cellH;
+    let synth;
+    let soundLoop;
+    let clickedCell = null;
+    let buttons = [];
+    let clickSound;
+
+    // Define Jingle Bells melody (note, duration in beats)
+    let jingleBellsMelody = [
+      ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], // "Jingle Bells"
+      ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1], // "Jingle Bells"
+      ['♩', 1], ['♩', 1], ['♪', 0.5], ['♪', 0.5], ['♩', 1], ['♩', 1], // "Jingle Bells"
+      ['♩', 1], ['♩', 1], ['♩', 1], ['♩', 1]  // "Jingle All The Way"
+    ];
+
+    function setup() {
+      createCanvas(800, 600);
+      textAlign(CENTER, CENTER);
+      textSize(24);
+      cellW = width / (bpmOptions.length + 3);
+      cellH = 50;
+
+      // synth for playback
+      synth = new p5.MonoSynth();
+
+      // one loop to schedule nothing by default
+      soundLoop = new p5.SoundLoop(playStep, currentBpm);
+      soundLoop.start();
+
+      // Create BPM buttons
+      createBpmButtons();
+
+      // Create a simple click sound
+      clickSound = new p5.Oscillator('sine');
+      clickSound.amp(0.1);
+      clickSound.freq(600);
+      clickSound.start();
+      clickSound.stop();
+
+      // Start playing Jingle Bells
+      playJingleBells();
+    }
+
+    function draw() {
+      background(255);
+      drawTable();
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].draw();
+      }
+    }
+
+    // Draw grid and labels
+    function drawTable() {
+      fill(0);
+      text("Note/Rest", cellW * 1.5, cellH / 2);
+      for (let i = 0; i < bpmOptions.length; i++) {
+        text(bpmOptions[i] + " BPM", cellW * (i + 2.5), cellH / 2);
+      }
+
+      for (let r = 0; r < tableData.length; r++) {
+        let y = cellH * (r + 1);
+        fill(0);
+        text(tableData[r][0] + " " + tableData[r][1], cellW * 1.5, y + cellH / 2);
+
+        for (let c = 0; c < bpmOptions.length; c++) {
+          let x = cellW * (c + 2);
+          if (clickedCell && clickedCell.r === r && clickedCell.c === c) {
+            fill(255, 0, 0, 100);
+            rect(x, y, cellW, cellH);
+          }
+          noFill();
+          stroke(0);
+          rect(x, y, cellW, cellH);
+          let seconds = (60 / bpmOptions[c]) * tableData[r][2];
+          fill(0);
+          noStroke();
+          text(seconds.toFixed(3) + "s", x + cellW / 2, y + cellH / 2 + 20);
+        }
+      }
+    }
+
+    function createBpmButtons() {
+      let buttonY = height / 2 - 50;
+      let buttonSpacing = 60;
+
+      // Create buttons for each BPM option
+      for (let i = 0; i < bpmOptions.length; i++) {
+        let button = new BpmButton(bpmOptions[i], width - 150, buttonY + i * buttonSpacing, 100, 50);
+        button.onClick(() => setBpm(bpmOptions[i]));
+        buttons.push(button);
+      }
+    }
+
+    function setBpm(bpm) {
+      currentBpm = bpm;
+      soundLoop.bpm = currentBpm;
+      playClickSound();  // Play click sound when button is pressed
+    }
+
+    // BpmButton class for clickable buttons
+    class BpmButton {
+      constructor(label, x, y, w, h) {
+        this.label = label;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.clicked = false;
+      }
+
+      draw() {
+        fill(this.clicked ? 'gray' : 'lightblue');
+        rect(this.x, this.y, this.w, this.h);
+        fill(0);
+        text(this.label + " BPM", this.x + this.w / 2, this.y + this.h / 2);
+      }
+
+      onClick(callback) {
+        if (this.isMouseOver() && mouseIsPressed) {
+          this.clicked = true;
+          callback();
+          setTimeout(() => this.clicked = false, 200);  // Reset button appearance after a short time
+        }
+      }
+
+      isMouseOver() {
+        return mouseX > this.x && mouseX < this.x + this.w && mouseY > this.y && mouseY < this.y + this.h;
+      }
+    }
+
+    // Play a short "click" sound for feedback
+    function playClickSound() {
+      clickSound.start();
+      setTimeout(() => clickSound.stop(), 100);  // Stop the sound after 100ms
+    }
+
+    // Play the melody of Jingle Bells
+    function playJingleBells() {
+      let time = 0;
+      for (let i = 0; i < jingleBellsMelody.length; i++) {
+        let note = jingleBellsMelody[i][0];
+        let duration = jingleBellsMelody[i][1];
+        let dur = (60 / currentBpm) * duration;
+        
+        // Schedule the note and simulate the button press
+        setTimeout(() => {
+          // Simulate pressing a button for the note
+          let row = tableData.findIndex(item => item[1] === note);
+          if (row !== -1) {
+            clickedCell = { r: row, c: 0 }; // Choose the first BPM for simplicity
+            playNote(note, duration);
+          }
+        }, time * 1000);
+
+        time += (60 / currentBpm) * duration;
+      }
+    }
+
+    // on click, detect cell and schedule playback
+    function mousePressed() {
+      let row = floor(mouseY / cellH) - 1;
+      let col = floor((mouseX - cellW * 2) / cellW);
+      if (row >= 0 && row < tableData.length && col >= 0 && col < bpmOptions.length) {
+        currentBpm = bpmOptions[col];
+        soundLoop.bpm = currentBpm;
+        clickedCell = {r: row, c: col};
+        playNote(tableData[row][1], tableData[row][2]);
+      }
+    }
+
+    // play a single note/rest immediately
+    function playNote(symbol, beats) {
+      let dur = (60 / currentBpm) * beats;
+      if (symbol.includes("Rest")) {
+        setTimeout(() => clickedCell = null, dur * 1000);
+      } else {
+        synth.play('C4', 0.5, 0, dur);
+        setTimeout(() => clickedCell = null, dur * 1000);
+      }
+    }
+
+    // required by SoundLoop but we do nothing on each tick
+    function playStep(time) {}
+
+
+
+
+
+
+
+
+music trainnerforkids
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ let tableData = [
+      ["Whole Note", "♩̄", 4],
+      ["Whole Rest", "𝄻", 4],
+      ["Half Note", "♫", 2],
+      ["Half Rest", "𝄼", 2],
+      ["Quarter Note", "♩", 1],
+      ["Quarter Rest", "𝄽", 1],
+      ["Eighth Note", "♪", 0.5],
+      ["Eighth Rest", "𝄾", 0.5],
+      ["Sixteenth Note", "♬", 0.25],
+      ["Sixteenth Rest", "𝄿", 0.25],
+      ["32nd Note", "𝄪", 0.125],
+      ["32nd Rest", "𝄬", 0.125]
+    ];
+
+    let bpmOptions = [120, 160, 2000];
+    let currentBpm = 120;
+    let cellW, cellH;
+    let synth;
+    let soundLoop;
+    let clickedCell = null;
+    let buttons = [];
+    let clickSound;
+
+    function setup() {
+      createCanvas(800, 600);
+      textAlign(CENTER, CENTER);
+      textSize(24);
+      cellW = width / (bpmOptions.length + 3);
+      cellH = 50;
+
+      // synth for playback
+      synth = new p5.MonoSynth();
+
+      // one loop to schedule nothing by default
+      soundLoop = new p5.SoundLoop(playStep, currentBpm);
+      soundLoop.start();
+
+      // Create BPM buttons
+      createBpmButtons();
+
+      // Create a simple click sound
+      clickSound = new p5.Oscillator('sine');
+      clickSound.amp(0.1);
+      clickSound.freq(600);
+      clickSound.start();
+      clickSound.stop();
+    }
+
+    function draw() {
+      background(255);
+      drawTable();
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].draw();
+      }
+    }
+
+    // draw grid and labels
+    function drawTable() {
+      fill(0);
+      text("Note/Rest", cellW * 1.5, cellH / 2);
+      for (let i = 0; i < bpmOptions.length; i++) {
+        text(bpmOptions[i] + " BPM", cellW * (i + 2.5), cellH / 2);
+      }
+
+      for (let r = 0; r < tableData.length; r++) {
+        let y = cellH * (r + 1);
+        fill(0);
+        text(tableData[r][0] + " " + tableData[r][1], cellW * 1.5, y + cellH / 2);
+
+        for (let c = 0; c < bpmOptions.length; c++) {
+          let x = cellW * (c + 2);
+          if (clickedCell && clickedCell.r === r && clickedCell.c === c) {
+            fill(255, 0, 0, 100);
+            rect(x, y, cellW, cellH);
+          }
+          noFill();
+          stroke(0);
+          rect(x, y, cellW, cellH);
+          let seconds = (60 / bpmOptions[c]) * tableData[r][2];
+          fill(0);
+          noStroke();
+          text(seconds.toFixed(3) + "s", x + cellW / 2, y + cellH / 2 + 20);
+        }
+      }
+    }
+
+    function createBpmButtons() {
+      let buttonY = height / 2 - 50;
+      let buttonSpacing = 60;
+
+      // Create buttons for each BPM option
+      for (let i = 0; i < bpmOptions.length; i++) {
+        let button = new BpmButton(bpmOptions[i], width - 150, buttonY + i * buttonSpacing, 100, 50);
+        button.onClick(() => setBpm(bpmOptions[i]));
+        buttons.push(button);
+      }
+    }
+
+    function setBpm(bpm) {
+      currentBpm = bpm;
+      soundLoop.bpm = currentBpm;
+      playClickSound();  // Play click sound when button is pressed
+    }
+
+    // BpmButton class for clickable buttons
+    class BpmButton {
+      constructor(label, x, y, w, h) {
+        this.label = label;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.clicked = false;
+      }
+
+      draw() {
+        fill(this.clicked ? 'gray' : 'lightblue');
+        rect(this.x, this.y, this.w, this.h);
+        fill(0);
+        text(this.label + " BPM", this.x + this.w / 2, this.y + this.h / 2);
+      }
+
+      onClick(callback) {
+        if (this.isMouseOver() && mouseIsPressed) {
+          this.clicked = true;
+          callback();
+          setTimeout(() => this.clicked = false, 200);  // Reset button appearance after a short time
+        }
+      }
+
+      isMouseOver() {
+        return mouseX > this.x && mouseX < this.x + this.w && mouseY > this.y && mouseY < this.y + this.h;
+      }
+    }
+
+    // Play a short "click" sound for feedback
+    function playClickSound() {
+      clickSound.start();
+      setTimeout(() => clickSound.stop(), 100);  // Stop the sound after 100ms
+    }
+
+    // on click, detect cell and schedule playback
+    function mousePressed() {
+      let row = floor(mouseY / cellH) - 1;
+      let col = floor((mouseX - cellW * 2) / cellW);
+      if (row >= 0 && row < tableData.length && col >= 0 && col < bpmOptions.length) {
+        currentBpm = bpmOptions[col];
+        soundLoop.bpm = currentBpm;
+        clickedCell = {r: row, c: col};
+        playNote(tableData[row][1], tableData[row][2]);
+      }
+    }
+
+    // play a single note/rest immediately
+    function playNote(symbol, beats) {
+      let dur = (60 / currentBpm) * beats;
+      if (symbol.includes("Rest")) {
+        setTimeout(() => clickedCell = null, dur * 1000);
+      } else {
+        synth.play('C4', 0.5, 0, dur);
+        setTimeout(() => clickedCell = null, dur * 1000);
+      }
+    }
+
+    // required by SoundLoop but we do nothing on each tick
+    function playStep(time) {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
